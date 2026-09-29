@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const massController_1 = require("../controllers/massController");
+const auth_1 = require("../middleware/auth");
+const rbac_1 = require("../middleware/rbac");
+const Role_1 = require("../models/Role");
+const router = (0, express_1.Router)();
+router.get('/', massController_1.getMassSchedules);
+router.post('/', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), massController_1.createMassSchedule);
+router.put('/:id', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), massController_1.updateMassSchedule);
+router.delete('/:id', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), massController_1.deleteMassSchedule);
+exports.default = router;

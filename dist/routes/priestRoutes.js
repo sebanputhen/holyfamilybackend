@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const priestController_1 = require("../controllers/priestController");
+const auth_1 = require("../middleware/auth");
+const rbac_1 = require("../middleware/rbac");
+const Role_1 = require("../models/Role");
+const router = (0, express_1.Router)();
+router.get('/', priestController_1.getPriests);
+router.get('/:id', priestController_1.getPriestById);
+router.post('/', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), priestController_1.createPriest);
+router.put('/:id', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), priestController_1.updatePriest);
+router.delete('/:id', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), priestController_1.deletePriest);
+exports.default = router;

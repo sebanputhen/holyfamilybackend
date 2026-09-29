@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const galleryController_1 = require("../controllers/galleryController");
+const auth_1 = require("../middleware/auth");
+const rbac_1 = require("../middleware/rbac");
+const Role_1 = require("../models/Role");
+const router = (0, express_1.Router)();
+router.get('/', galleryController_1.getAlbums);
+router.get('/:id', galleryController_1.getAlbumById);
+router.post('/', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), galleryController_1.createAlbum);
+router.post('/:id/items', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), galleryController_1.addItemToAlbum);
+router.delete('/:id', auth_1.authenticate, (0, rbac_1.requireRole)(Role_1.UserRole.ADMIN, Role_1.UserRole.SUPER_ADMIN), galleryController_1.deleteAlbum);
+exports.default = router;

@@ -1,0 +1,48 @@
+import { Router } from 'express';
+import authRoutes from './authRoutes';
+import parishRoutes from './parishRoutes';
+import familyRoutes from './familyRoutes';
+import personRoutes from './personRoutes';
+import koottaymaRoutes from './koottaymaRoutes';
+import prayerMeetingRoutes from './prayerMeetingRoutes';
+import massRoutes from './massRoutes';
+import eventRoutes from './eventRoutes';
+import announcementRoutes from './announcementRoutes';
+import notificationRoutes from './notificationRoutes';
+import readingRoutes from './readingRoutes';
+import historyRoutes from './historyRoutes';
+import priestRoutes from './priestRoutes';
+import sisterRoutes from './sisterRoutes';
+import organizationRoutes from './organizationRoutes';
+import galleryRoutes from './galleryRoutes';
+import userRoutes from './userRoutes';
+import auditRoutes from './auditRoutes';
+import settingRoutes from './settingRoutes';
+import searchRoutes from './searchRoutes';
+import analyticsRoutes from './analyticsRoutes';
+
+const router = Router();
+
+router.use('/auth', authRoutes);
+router.use('/parish', parishRoutes);
+router.use('/families', familyRoutes);
+router.use('/persons', personRoutes);
+router.use('/koottaymas', koottaymaRoutes);
+router.use('/prayer-meetings', prayerMeetingRoutes);
+router.use('/mass-schedules', massRoutes);
+router.use('/events', eventRoutes);
+router.use('/announcements', announcementRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/readings', readingRoutes);
+router.use('/history', historyRoutes);
+router.use('/priests', priestRoutes);
+router.use('/religious-sisters', sisterRoutes);
+router.use('/organizations', organizationRoutes);
+router.use('/gallery', galleryRoutes);
+router.use('/users', userRoutes);
+router.use('/audit-logs', auditRoutes);
+router.use('/settings', settingRoutes);
+router.use('/search', searchRoutes);
+router.use('/analytics', analyticsRoutes);
+
+export default router;
