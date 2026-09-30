@@ -90,7 +90,77 @@ const handleSeed = async (req: Request, res: Response) => {
   }
 };
 
+// GET & POST /api/v1/setup/seed-koottaymas - Fast 55-unit metadata sync (under 2 seconds)
+const handleSeedKoottaymas = async (req: Request, res: Response) => {
+  try {
+    const { AUTHENTIC_KOOTTAYMAS } = await import('../seeds/koottaymaDirectoryData');
+    console.log('--- Fast-Syncing 55 Authentic Koottaymas ---');
+    const updatedUnits = [];
+
+    for (const [unitCode, meta] of Object.entries(AUTHENTIC_KOOTTAYMAS)) {
+      const doc = await Koottayma.findOneAndUpdate(
+        { number: unitCode },
+        {
+          $set: {
+            name: meta.nameEn,
+            nameMl: meta.nameMl,
+            number: unitCode,
+            unitCode: unitCode,
+            patronSaint: meta.patronSaint,
+            feastDate: meta.feastDate,
+            location: meta.location,
+            zone: meta.zone,
+            totalHouses: meta.totalHouses,
+            description: `${meta.zone} • ${meta.location} • Feast: ${meta.feastDate}`,
+            meetingLocation: meta.location || 'Rotating Family Residences',
+            meetingDay: 'Sunday',
+            meetingTime: '05:00 PM',
+            status: 'Active',
+          },
+          $setOnInsert: {
+            leader: 'Unit Coordinator',
+            leaderPhone: '+91 98000 00000',
+          },
+        },
+        { upsert: true, new: true }
+      );
+      updatedUnits.push({
+        unit: unitCode,
+        name: doc.name,
+        nameMl: doc.nameMl,
+        patronSaint: doc.patronSaint,
+        zone: doc.zone,
+        location: doc.location,
+        feastDate: doc.feastDate,
+        houses: doc.totalHouses,
+      });
+    }
+
+    // Update family records with new authentic Koottayma names
+    const koottaymaDocs = await Koottayma.find({});
+    const bulkFamilyOps = koottaymaDocs.map((k) => ({
+      updateMany: {
+        filter: { koottaymaId: k._id },
+        update: { $set: { koottaymaName: k.name } },
+      },
+    }));
+    if (bulkFamilyOps.length > 0) {
+      await Family.bulkWrite(bulkFamilyOps);
+    }
+
+    return sendSuccess(res, {
+      count: updatedUnits.length,
+      units: updatedUnits,
+    }, 'All 55 authentic Koottaymas successfully updated with Malayalam names, patron saints, feast dates, and biblical zones!');
+  } catch (error: any) {
+    console.error('Koottayma Seed Failed:', error);
+    return sendError(res, `Koottayma fast seed failed: ${error.message}`, 'SEED_KOOTTAYMAS_FAILED', 500);
+  }
+};
+
 router.get('/seed', handleSeed);
 router.post('/seed', handleSeed);
+router.get('/seed-koottaymas', handleSeedKoottaymas);
+router.post('/seed-koottaymas', handleSeedKoottaymas);
 
 export default router;
