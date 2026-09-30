@@ -4,6 +4,7 @@ exports.importParishDirectory = importParishDirectory;
 const database_1 = require("../config/database");
 const models_1 = require("../models");
 const directoryParser_1 = require("./directoryParser");
+const koottaymaDirectoryData_1 = require("./koottaymaDirectoryData");
 async function importParishDirectory() {
     console.log('--- Importing Authentic Parish Directory Records ---');
     const records = (0, directoryParser_1.loadParishDirectory)();
@@ -19,7 +20,7 @@ async function importParishDirectory() {
         grouped.set(r.group, list);
     }
     console.log(`Found ${records.length} family entries across ${grouped.size} Koottayma units.`);
-    // 2. Ensure each Koottayma unit exists
+    // 2. Ensure each Koottayma unit exists with authentic directory names
     const koottaymaMap = new Map();
     // Fetch existing Koottaymas
     const existingKoottaymas = await models_1.Koottayma.find({});
@@ -27,73 +28,48 @@ async function importParishDirectory() {
         koottaymaMap.set(String(k.number), k);
     }
     for (const [groupName, groupRecords] of grouped.entries()) {
+        const meta = koottaymaDirectoryData_1.AUTHENTIC_KOOTTAYMAS[groupName];
+        const firstHead = groupRecords[0]?.headOfFamily || 'Unit Coordinator';
+        const firstPhone = groupRecords[0]?.phone1 || '+91 98000 00000';
+        const displayName = meta ? meta.nameEn : `Koottayma Unit ${groupName}`;
+        const nameMl = meta ? meta.nameMl : `കൂട്ടായ്മ ${groupName}`;
+        const patronSaint = meta ? meta.patronSaint : 'St. Mary';
+        const feastDate = meta ? meta.feastDate : '';
+        const location = meta ? meta.location : 'Rotating Family Residences';
+        const zone = meta ? meta.zone : 'Parish Zone';
+        const totalHouses = meta ? meta.totalHouses : groupRecords.length;
         let kDoc = koottaymaMap.get(groupName);
         if (!kDoc) {
-            const firstHead = groupRecords[0]?.headOfFamily || 'Unit Coordinator';
-            const firstPhone = groupRecords[0]?.phone1 || '+91 98000 00000';
-            let displayName = `Koottayma Unit ${groupName}`;
-            let patronSaint = "St. Mary";
-            if (groupName === '1') {
-                displayName = 'St. Thomas Koottayma (Unit 1)';
-                patronSaint = 'St. Thomas the Apostle';
-            }
-            else if (groupName === '2') {
-                displayName = 'St. Joseph Koottayma (Unit 2)';
-                patronSaint = 'St. Joseph';
-            }
-            else if (groupName === '3A' || groupName === '3') {
-                displayName = `Holy Family Koottayma (Unit ${groupName})`;
-                patronSaint = 'Holy Family';
-            }
-            else if (groupName === '3B' || groupName === '4') {
-                displayName = `St. Alphonsa Koottayma (Unit ${groupName})`;
-                patronSaint = 'St. Alphonsa';
-            }
-            else if (groupName === '4A') {
-                displayName = 'St. Antony Koottayma (Unit 4A)';
-                patronSaint = 'St. Antony of Padua';
-            }
-            else if (groupName === '4B') {
-                displayName = 'St. George Koottayma (Unit 4B)';
-                patronSaint = 'St. George';
-            }
-            else if (groupName === '5A') {
-                displayName = 'St. Jude Koottayma (Unit 5A)';
-                patronSaint = 'St. Jude';
-            }
-            else if (groupName === '5B') {
-                displayName = 'St. Sebastian Koottayma (Unit 5B)';
-                patronSaint = 'St. Sebastian';
-            }
-            else if (groupName === '6A') {
-                displayName = 'Mother Teresa Koottayma (Unit 6A)';
-                patronSaint = 'St. Teresa of Calcutta';
-            }
-            else if (groupName === '6B') {
-                displayName = 'Little Flower Koottayma (Unit 6B)';
-                patronSaint = 'St. Therese of Lisieux';
-            }
-            else if (groupName === '7A') {
-                displayName = 'St. Francis Koottayma (Unit 7A)';
-                patronSaint = 'St. Francis of Assisi';
-            }
-            else if (groupName === '7B') {
-                displayName = 'St. Paul Koottayma (Unit 7B)';
-                patronSaint = 'St. Paul the Apostle';
-            }
             kDoc = await models_1.Koottayma.create({
                 name: displayName,
+                nameMl,
                 number: groupName,
                 unitCode: groupName,
                 patronSaint,
+                feastDate,
+                location,
+                zone,
+                totalHouses,
                 leader: firstHead,
                 leaderPhone: firstPhone,
-                meetingLocation: 'Rotating Family Residences',
+                meetingLocation: location || 'Rotating Family Residences',
                 meetingDay: 'Sunday',
                 meetingTime: '05:00 PM',
-                description: `Koottayma prayer and pastoral unit for Group ${groupName}, St. Mary's Forane Parish.`,
+                description: `${zone} • ${location} • Feast: ${feastDate}`,
                 status: 'Active',
             });
+            koottaymaMap.set(groupName, kDoc);
+        }
+        else {
+            kDoc.name = displayName;
+            kDoc.nameMl = nameMl;
+            kDoc.patronSaint = patronSaint;
+            kDoc.feastDate = feastDate;
+            kDoc.location = location;
+            kDoc.zone = zone;
+            kDoc.totalHouses = totalHouses;
+            kDoc.description = `${zone} • ${location} • Feast: ${feastDate}`;
+            await kDoc.save();
             koottaymaMap.set(groupName, kDoc);
         }
     }

@@ -13,6 +13,11 @@ export interface IKoottayma extends Document {
   meetingDay: string;
   meetingTime: string;
   description?: string;
+  nameMl?: string;
+  feastDate?: string;
+  location?: string;
+  zone?: string;
+  totalHouses?: number;
   assignedLeaderUserId?: mongoose.Types.ObjectId;
   status: 'Active' | 'Inactive';
   createdAt: Date;
@@ -22,9 +27,14 @@ export interface IKoottayma extends Document {
 const KoottaymaSchema = new Schema<IKoottayma>(
   {
     name: { type: String, required: true, trim: true },
+    nameMl: { type: String, default: '' },
     number: { type: Schema.Types.Mixed, required: true, unique: true },
     unitCode: { type: String, default: '' },
     patronSaint: { type: String, required: true },
+    feastDate: { type: String, default: '' },
+    location: { type: String, default: '' },
+    zone: { type: String, default: '' },
+    totalHouses: { type: Number, default: 0 },
     leader: { type: String, required: true },
     leaderPhone: { type: String, required: true },
     assistantLeader: { type: String, default: '' },

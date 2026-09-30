@@ -12,6 +12,11 @@ export interface IKoottayma extends Document {
     meetingDay: string;
     meetingTime: string;
     description?: string;
+    nameMl?: string;
+    feastDate?: string;
+    location?: string;
+    zone?: string;
+    totalHouses?: number;
     assignedLeaderUserId?: mongoose.Types.ObjectId;
     status: 'Active' | 'Inactive';
     createdAt: Date;

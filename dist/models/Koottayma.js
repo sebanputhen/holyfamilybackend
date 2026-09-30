@@ -37,9 +37,14 @@ exports.Koottayma = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const KoottaymaSchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true },
+    nameMl: { type: String, default: '' },
     number: { type: mongoose_1.Schema.Types.Mixed, required: true, unique: true },
     unitCode: { type: String, default: '' },
     patronSaint: { type: String, required: true },
+    feastDate: { type: String, default: '' },
+    location: { type: String, default: '' },
+    zone: { type: String, default: '' },
+    totalHouses: { type: Number, default: 0 },
     leader: { type: String, required: true },
     leaderPhone: { type: String, required: true },
     assistantLeader: { type: String, default: '' },
