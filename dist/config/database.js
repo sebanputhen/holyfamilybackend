@@ -40,41 +40,60 @@ exports.connectDB = connectDB;
 exports.disconnectDB = disconnectDB;
 const mongoose_1 = __importDefault(require("mongoose"));
 const environment_1 = require("./environment");
-let isConnected = false;
+let cached = global.mongoose;
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
 async function connectDB() {
-    if (isConnected)
-        return;
-    const mongoOptions = {
-        serverSelectionTimeoutMS: 5000,
-    };
+    if (cached.conn && mongoose_1.default.connection.readyState === 1) {
+        return cached.conn;
+    }
+    if (!cached.promise) {
+        const mongoOptions = {
+            serverSelectionTimeoutMS: 5000,
+            bufferCommands: false, // Prevents 10s hang in serverless environments
+        };
+        const maskedUri = environment_1.config.mongoUri.replace(/:([^:@]{4})[^:@]*@/, ':****@');
+        console.log(`Connecting to MongoDB at ${maskedUri}...`);
+        cached.promise = mongoose_1.default
+            .connect(environment_1.config.mongoUri, mongoOptions)
+            .then((m) => {
+            console.log('MongoDB connected successfully.');
+            return m;
+        })
+            .catch(async (err) => {
+            console.warn(`Standard MongoDB connection failed: ${err.message}.`);
+            if (environment_1.config.env === 'development' || environment_1.config.env === 'test') {
+                console.warn('Initializing in-memory fallback for development/test...');
+                try {
+                    const { MongoMemoryServer } = await Promise.resolve().then(() => __importStar(require('mongodb-memory-server')));
+                    const mongod = await MongoMemoryServer.create();
+                    const memoryUri = mongod.getUri();
+                    console.log(`Connecting to In-Memory MongoDB at ${memoryUri}...`);
+                    return await mongoose_1.default.connect(memoryUri, { bufferCommands: false });
+                }
+                catch (fallbackErr) {
+                    console.error('In-memory MongoDB fallback failed:', fallbackErr.message);
+                    throw err;
+                }
+            }
+            throw err;
+        });
+    }
     try {
-        console.log(`Connecting to MongoDB at ${environment_1.config.mongoUri}...`);
-        await mongoose_1.default.connect(environment_1.config.mongoUri, mongoOptions);
-        isConnected = true;
-        console.log('MongoDB connected successfully.');
+        cached.conn = await cached.promise;
     }
-    catch (err) {
-        console.warn(`Standard MongoDB connection failed: ${err.message}. Initializing in-memory fallback...`);
-        try {
-            // Dynamic import of mongodb-memory-server if available
-            const { MongoMemoryServer } = await Promise.resolve().then(() => __importStar(require('mongodb-memory-server')));
-            const mongod = await MongoMemoryServer.create();
-            const memoryUri = mongod.getUri();
-            console.log(`Connecting to In-Memory MongoDB at ${memoryUri}...`);
-            await mongoose_1.default.connect(memoryUri);
-            isConnected = true;
-            console.log('In-Memory MongoDB connected successfully.');
-        }
-        catch (fallbackErr) {
-            console.error('All MongoDB connection attempts failed:', fallbackErr.message);
-            throw fallbackErr;
-        }
+    catch (e) {
+        cached.promise = null;
+        throw e;
     }
+    return cached.conn;
 }
 async function disconnectDB() {
-    if (!isConnected)
+    if (!cached.conn)
         return;
     await mongoose_1.default.disconnect();
-    isConnected = false;
+    cached.conn = null;
+    cached.promise = null;
     console.log('MongoDB disconnected.');
 }

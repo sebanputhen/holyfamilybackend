@@ -7,7 +7,7 @@ const rbac_1 = require("../middleware/rbac");
 const ownership_1 = require("../middleware/ownership");
 const Role_1 = require("../models/Role");
 const router = (0, express_1.Router)();
-router.get('/', auth_1.authenticate, koottaymaController_1.getKoottaymas);
+router.get('/', auth_1.optionalAuthenticate, koottaymaController_1.getKoottaymas);
 router.get('/dashboard/:id?', auth_1.authenticate, (0, ownership_1.verifyKoottaymaOwnership)('id'), koottaymaController_1.getKoottaymaDashboard);
 router.get('/:id', auth_1.authenticate, (0, ownership_1.verifyKoottaymaOwnership)('id'), koottaymaController_1.getKoottaymaById);
 // Admin & Super Admin only

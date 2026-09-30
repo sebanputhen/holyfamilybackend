@@ -126,19 +126,29 @@ async function importParishDirectory() {
         };
         const famDoc = await models_1.Family.findOneAndUpdate({ familyId }, { $set: familyData }, { upsert: true, new: true });
         // Create Head of Family Person record if not exists
-        await models_1.Person.findOneAndUpdate({ familyId: famDoc._id, isHeadOfFamily: true }, {
+        const pDoc = await models_1.Person.findOneAndUpdate({ familyId: famDoc._id, relationship: 'Head' }, {
             $set: {
                 familyId: famDoc._id,
                 name: r.headOfFamily,
                 gender: 'Male',
                 relationship: 'Head',
-                isHeadOfFamily: true,
                 phone: r.phone1 || '',
+                familyName: famDoc.familyName,
                 koottaymaId: famDoc.koottaymaId,
-                koottaymaName: famDoc.koottaymaName,
+                parish: famDoc.parish,
                 status: 'Active',
+                privacy: {
+                    isPhoneVisible: true,
+                    isEmailVisible: true,
+                    isDobVisible: true,
+                    isOccupationVisible: true,
+                },
             },
         }, { upsert: true, new: true });
+        if (!famDoc.headPersonId) {
+            famDoc.headPersonId = pDoc._id;
+            await famDoc.save();
+        }
         importedCount++;
     }
     // Update parish statistics

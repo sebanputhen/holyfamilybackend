@@ -20,9 +20,11 @@ import auditRoutes from './auditRoutes';
 import settingRoutes from './settingRoutes';
 import searchRoutes from './searchRoutes';
 import analyticsRoutes from './analyticsRoutes';
+import setupRoutes from './setupRoutes';
 
 const router = Router();
 
+router.use('/setup', setupRoutes);
 router.use('/auth', authRoutes);
 router.use('/parish', parishRoutes);
 router.use('/families', familyRoutes);

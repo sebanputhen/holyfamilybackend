@@ -41,4 +41,9 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+// Only start standalone HTTP listener when not running in serverless environment (e.g. Vercel)
+if (process.env.VERCEL !== '1') {
+  bootstrap();
+}
+
+export default app;
